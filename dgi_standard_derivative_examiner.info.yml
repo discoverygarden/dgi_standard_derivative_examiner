@@ -1,0 +1,7 @@
+name: DGI Standard Derivative Examiner
+type: module
+description: Provides tools for identifying missing derivatives given DGI's standard content model.
+package: DGI
+core_version_requirement: ^9
+dependencies:
+  - islandora:islandora
