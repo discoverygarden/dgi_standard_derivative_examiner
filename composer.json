@@ -1,0 +1,8 @@
+{
+    "name": "discoverygarden/dgi_standard_derivative_examiner",
+    "type": "drupal-module",
+    "license": "GPL-3.0-or-later",
+    "require": {
+        "islandora/islandora": "^2"
+    }
+}

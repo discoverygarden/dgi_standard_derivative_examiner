@@ -1,0 +1,4 @@
+services:
+  dgi_standard_derivative_examiner.examiner:
+    class: Drupal\dgi_standard_derivative_examiner\Utility\Examiner
+    arguments: ['@entity_type.manager', '@islandora.utils']
