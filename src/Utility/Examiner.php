@@ -80,6 +80,8 @@ class Examiner {
         'use_uri' => 'http://pcdm.org/use#ServiceFile',
       ],
     ],
+    // 3D Model.
+    'https://schema.org/3DModel' => [],
   ];
 
   /**
