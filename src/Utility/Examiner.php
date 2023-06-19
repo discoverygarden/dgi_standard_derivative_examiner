@@ -64,6 +64,10 @@ class Examiner {
         'bundle' => 'image',
         'use_uri' => 'http://pcdm.org/use#ServiceFile',
       ],
+      [
+        'bundle' => 'file',
+        'use_uri' => 'https://discoverygarden.ca/use#hocr',
+      ],
     ],
     // Paged Content.
     'https://schema.org/Book' => [],
