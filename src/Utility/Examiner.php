@@ -159,6 +159,10 @@ class Examiner {
                   ->loadByProperties([IslandoraUtils::EXTERNAL_URI_FIELD => $values['use_uri']]);
                 // Only expect one here.
                 $media_use_term = reset($media_use_terms);
+                // The case the term URI doesn't exist.
+                if (!$media_use_term) {
+                  continue;
+                }
                 $derivatives = $this->islandoraUtils->getMediaReferencingNodeAndTerm($node, $media_use_term);
                 if (empty($derivatives)) {
                   $missing[] = $values + ['message' => 'Missing derivative media and file.'];
