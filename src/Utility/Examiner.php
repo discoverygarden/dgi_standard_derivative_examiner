@@ -36,7 +36,16 @@ class Examiner {
     // Compound.
     'http://vocab.getty.edu/aat/300242735' => [],
     // Digital Document.
-    'https://schema.org/DigitalDocument' => [],
+    'https://schema.org/DigitalDocument' => [
+      [
+        'bundle' => 'extracted_text',
+        'use_uri' => 'http://pcdm.org/use#ExtractedText',
+      ],
+      [
+        'bundle' => 'image',
+        'use_uri' => 'http://pcdm.org/use#ServiceFile',
+      ],
+    ],
     // Image.
     'http://purl.org/coar/resource_type/c_c513' => [
       [
