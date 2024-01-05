@@ -130,7 +130,7 @@ class Examiner implements ExaminerInterface {
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, IslandoraUtils $islandora_utils) {
     $this->entityTypeManager = $entity_type_manager;
-    $this->fileStorage = $entity_type_manager->getStorage('file');
+    $this->fileStorage = $this->entityTypeManager->getStorage('file');
     $this->mediaStorage = $this->entityTypeManager->getStorage('media');
     $this->islandoraUtils = $islandora_utils;
   }
