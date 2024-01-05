@@ -3,13 +3,16 @@
 namespace Drupal\dgi_standard_derivative_examiner\Utility;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\file\FileStorageInterface;
 use Drupal\islandora\IslandoraUtils;
+use Drupal\media\MediaStorage;
 use Drupal\node\NodeInterface;
+use Drupal\taxonomy\TermInterface;
 
 /**
  * Service class to determine whether a node is missing derivatives.
  */
-class Examiner {
+class Examiner implements ExaminerInterface {
 
   /**
    * Lays out expectation given DGI's standard content type.
@@ -101,6 +104,23 @@ class Examiner {
   protected IslandoraUtils $islandoraUtils;
 
   /**
+   * The file storage service.
+   *
+   * @var \Drupal\file\FileStorageInterface
+   */
+  protected FileStorageInterface $fileStorage;
+
+  /**
+   * The media storage service.
+   *
+   * XXX: Ideally, could reference an interface; however, this does not appear
+   * to have one?
+   *
+   * @var \Drupal\media\MediaStorage
+   */
+  protected MediaStorage $mediaStorage;
+
+  /**
    * Constructor for the derivative examiner.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -110,75 +130,137 @@ class Examiner {
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, IslandoraUtils $islandora_utils) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->fileStorage = $entity_type_manager->getStorage('file');
+    $this->mediaStorage = $this->entityTypeManager->getStorage('media');
     $this->islandoraUtils = $islandora_utils;
   }
 
   /**
-   * Validates an entity to ensure all expected derivatives are present.
+   * Memoized original file taxonomy term.
    *
-   * @param \Drupal\node\NodeInterface $node
-   *   The node being examined.
-   *
-   * @return array
-   *   A key value array where the key is the nid of the node missing
-   *   derivatives and the values contain:
-   *   - bundle (string): The expected bundle of the media.
-   *   - use_uri (string): The media use URI that should be present.
-   *   - message (string): A human-readable string clarifying what is missing.
+   * @var \Drupal\taxonomy\TermInterface|null
    */
-  public function examine(NodeInterface $node) {
+  protected ?TermInterface $originalFileTerm;
+
+  /**
+   * Acquire the original file taxonomy term.
+   *
+   * @return \Drupal\taxonomy\TermInterface
+   *   The original file taxonomy term.
+   */
+  protected function getOriginalFileTerm() : TermInterface {
+    if (!isset($this->originalFileTerm)) {
+      $this->originalFileTerm = $this->islandoraUtils->getTermForUri('http://pcdm.org/use#OriginalFile');
+      if (!$this->originalFileTerm) {
+        throw new \LogicException('Missing original file taxnonomy term!');
+      }
+    }
+
+    return $this->originalFileTerm;
+  }
+
+  /**
+   * Memoized media use terms.
+   *
+   * Mapping of media URIs to either:
+   * - The target term, if found; or,
+   * - FALSE, if we could not find the target term.
+   *
+   * @var array<\Drupal\taxonomy\TermInterface, false>
+   */
+  protected array $useTerms = [];
+
+  /**
+   * Get term for the given media use.
+   *
+   * @param string $uri
+   *   The media use URI for which to fetch the term.
+   *
+   * @return \Drupal\taxonomy\TermInterface|null
+   *   The term if found; otherwise, NULL.
+   */
+  protected function getMediaUseTerm(string $uri) : ?TermInterface {
+    if (!array_key_exists($uri, $this->useTerms)) {
+      $this->useTerms[$uri] = $this->islandoraUtils->getTermForUri($uri);
+    }
+
+    return $this->useTerms[$uri];
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function examine(NodeInterface $node) : array {
     $missing = [];
     // First ensure that the entity being examined is grounded in Islandora.
-    if ($node->hasField(IslandoraUtils::MODEL_FIELD)) {
-      $field = $node->get(IslandoraUtils::MODEL_FIELD);
-      if (!$field->isEmpty()) {
-        $model_term = $field->referencedEntities()[0];
-        $model_external_uri = $model_term->get(IslandoraUtils::EXTERNAL_URI_FIELD)
-          ->getString();
+    if (!$node->hasField(IslandoraUtils::MODEL_FIELD)) {
+      throw new \InvalidArgumentException("The given node (nid {$node->id()}) does not have the " . IslandoraUtils::MODEL_FIELD . " field.");
+    }
 
-        // The node must have an original file to proceed.
-        $original_file_term = $this->islandoraUtils->getTermForUri('http://pcdm.org/use#OriginalFile');
-        $original_file_medias = $this->islandoraUtils->getMediaReferencingNodeAndTerm($node, $original_file_term);
-        if (!empty($original_file_medias)) {
-          // Verify that the original file media has a non-zero file.
-          $original_file_mid = reset($original_file_medias);
-          $original_file_media = $this->entityTypeManager->getStorage('media')->load($original_file_mid);
-          $original_file_fid = $original_file_media->getSource()->getSourceFieldValue($original_file_media);
-          if (empty($original_file_fid)) {
-            $missing[] = ['message' => 'Missing original file entity.'];
+    /** @var \Drupal\Core\Field\EntityReferenceFieldItemListInterface $field */
+    $field = $node->get(IslandoraUtils::MODEL_FIELD);
+    assert(!$field->isEmpty(), 'Missing model!?');
+
+    foreach ($field->referencedEntities() as $model_term) {
+      $model_external_uri = $model_term->get(IslandoraUtils::EXTERNAL_URI_FIELD)
+        ->getString();
+
+      // The node must have an original file to proceed.
+      $original_file_medias = $this->islandoraUtils->getMediaReferencingNodeAndTerm($node, $this->getOriginalFileTerm());
+      if (!empty($original_file_medias)) {
+        // Verify that the original file media has a non-zero file.
+        $original_file_mid = reset($original_file_medias);
+
+        /** @var \Drupal\media\MediaInterface $original_file_media */
+        $original_file_media = $this->mediaStorage->load($original_file_mid);
+        $original_file_fid = $original_file_media->getSource()->getSourceFieldValue($original_file_media);
+        if (empty($original_file_fid)) {
+          $missing[] = ['message' => 'Missing original file entity.'];
+        }
+        else {
+          /** @var \Drupal\file\FileInterface|null $file */
+          $file = $this->fileStorage->load($original_file_fid);
+          if (!$file) {
+            $missing[] = ['message' => 'Original file seems to be missing.'];
+          }
+          elseif ($file->getSize() <= 0) {
+            $missing[] = ['message' => 'Original file seems to be corrupt.'];
           }
           else {
-            $file = $this->entityTypeManager->getStorage('file')->load($original_file_fid);
-            if (!$file || $file->getSize() <= 0) {
-              $missing[] = ['message' => 'Original file seems to be missing or corrupt.'];
-            }
-            else {
-              // Finally validate against the derivative matrix.
-              foreach (self::DERIVATIVE_MATRIX[$model_external_uri] as $values) {
-                $media_use_terms = $this->entityTypeManager->getStorage('taxonomy_term')
-                  ->loadByProperties([IslandoraUtils::EXTERNAL_URI_FIELD => $values['use_uri']]);
-                // Only expect one here.
-                $media_use_term = reset($media_use_terms);
-                // The case the term URI doesn't exist.
-                if (!$media_use_term) {
-                  continue;
-                }
-                $derivatives = $this->islandoraUtils->getMediaReferencingNodeAndTerm($node, $media_use_term);
-                if (empty($derivatives)) {
-                  $missing[] = $values + ['message' => 'Missing derivative media and file.'];
+            // Finally validate against the derivative matrix.
+            foreach (self::DERIVATIVE_MATRIX[$model_external_uri] as $values) {
+              $media_use_term = $this->getMediaUseTerm($values['use_uri']);
+              // The case the term URI doesn't exist.
+              if (!$media_use_term) {
+                $missing[] = $values + ['message' => 'Missing media use term.'];
+                continue;
+              }
+
+              $derivatives = $this->islandoraUtils->getMediaReferencingNodeAndTerm($node, $media_use_term);
+              if (empty($derivatives)) {
+                $missing[] = $values + ['message' => 'Missing derivative media and file.'];
+                continue;
+              }
+              elseif (($count = count($derivatives)) > 1) {
+                $missing[] = $values + ['message' => "Found {$count} derivatives, but only one is expected."];
+              }
+
+              foreach ($derivatives as $derivative) {
+                /** @var \Drupal\media\MediaInterface $derivative_media */
+                $derivative_media = $this->mediaStorage->load($derivative);
+                $derivative_fid = $derivative_media->getSource()
+                  ->getSourceFieldValue($derivative_media);
+                if (empty($derivative_fid)) {
+                  $missing[] = $values + ['message' => 'Missing derivative file.'];
                 }
                 else {
-                  $derivative = reset($derivatives);
-                  $derivative_media = $this->entityTypeManager->getStorage('media')->load($derivative);
-                  $derivative_fid = $derivative_media->getSource()->getSourceFieldValue($derivative_media);
-                  if (empty($derivative_fid)) {
-                    $missing[] = $values + ['message' => 'Missing derivative file.'];
+                  /** @var \Drupal\file\FileInterface|null $file */
+                  $file = $this->fileStorage->load($derivative_fid);
+                  if (!$file) {
+                    $missing[] = $values + ['message' => 'Derivative file entity seems to be missing.'];
                   }
-                  else {
-                    $file = $this->entityTypeManager->getStorage('file')->load($derivative_fid);
-                    if (!$file || $file->getSize() <= 0) {
-                      $missing[] = $values + ['message' => 'Derivative file entity seems to be missing or corrupt.'];
-                    }
+                  elseif ($file->getSize() <= 0) {
+                    $missing[] = $values + ['message' => 'Derivative file entity seems to be corrupt.'];
                   }
                 }
               }
