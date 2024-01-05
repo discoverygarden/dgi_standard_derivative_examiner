@@ -166,7 +166,7 @@ class Examiner implements ExaminerInterface {
    * - The target term, if found; or,
    * - FALSE, if we could not find the target term.
    *
-   * @var array<\Drupal\taxonomy\TermInterface, false>
+   * @var \Drupal\taxonomy\TermInterface[]|null[]
    */
   protected array $useTerms = [];
 
