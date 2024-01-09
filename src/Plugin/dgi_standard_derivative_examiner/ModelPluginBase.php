@@ -39,13 +39,7 @@ abstract class ModelPluginBase extends PluginBase implements ContainerFactoryPlu
   }
 
   /**
-   * Get targets for the given model.
-   *
-   * @return \Drupal\dgi_standard_derivative_examiner\TargetInterface[]
-   *   An array of targets.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
-   *   If the plugin could not be created.
+   * {@inheritDoc}
    */
   public function getDerivativeTargets() : array {
     $targets = [];
