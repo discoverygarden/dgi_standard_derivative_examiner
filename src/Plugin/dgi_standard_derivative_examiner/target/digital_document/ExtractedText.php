@@ -2,8 +2,6 @@
 
 namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\target\digital_document;
 
-use Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\TargetPluginBase;
-
 /**
  * Digital document extracted text file.
  *
@@ -15,6 +13,6 @@ use Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_exami
  *   default_action = "get_ocr_from_image"
  * )
  */
-class ExtractedText extends TargetPluginBase {
+class ExtractedText extends AbstractUnderivedSource {
 
 }

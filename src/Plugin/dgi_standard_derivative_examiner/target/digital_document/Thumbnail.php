@@ -2,8 +2,6 @@
 
 namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\target\digital_document;
 
-use Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\TargetPluginBase;
-
 /**
  * Digital document thumbnail file.
  *
@@ -16,6 +14,6 @@ use Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_exami
  *    "digital_document_generate_a_thumbnail_from_an_original_file",
  * )
  */
-class Thumbnail extends TargetPluginBase {
+class Thumbnail extends AbstractUnderivedSource {
 
 }
