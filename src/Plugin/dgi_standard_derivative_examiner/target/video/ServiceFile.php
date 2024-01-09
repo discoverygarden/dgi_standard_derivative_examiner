@@ -2,7 +2,7 @@
 
 namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\target\video;
 
-use Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\target\audio\TargetPluginBase;
+use Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\TargetPluginBase;
 
 /**
  * Video service file.

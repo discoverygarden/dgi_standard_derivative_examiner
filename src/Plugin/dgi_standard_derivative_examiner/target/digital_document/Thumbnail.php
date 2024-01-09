@@ -1,14 +1,14 @@
 <?php
 
-namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\target\image;
+namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\target\digital_document;
 
 use Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\TargetPluginBase;
 
 /**
- * Image thumbnail file.
+ * Digital document thumbnail file.
  *
  * @DgiStandardDerivativeExaminerTarget(
- *   id = "image.thumbnail",
+ *   id = "digital_document.thumbnail",
  *   uri = "http://pcdm.org/use#ThumbnailImage",
  *   type = "image",
  * )

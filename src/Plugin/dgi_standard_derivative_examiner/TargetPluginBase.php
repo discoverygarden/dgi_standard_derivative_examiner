@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\target\audio;
+namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner;
 
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;

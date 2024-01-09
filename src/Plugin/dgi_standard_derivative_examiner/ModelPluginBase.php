@@ -1,14 +1,22 @@
 <?php
 
-namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\model;
+namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\dgi_standard_derivative_examiner\TargetPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Base model plugin.
+ */
 abstract class ModelPluginBase extends PluginBase implements ContainerFactoryPluginInterface {
 
+  /**
+   * Target plugin manager service.
+   *
+   * @var \Drupal\dgi_standard_derivative_examiner\TargetPluginManagerInterface
+   */
   protected TargetPluginManagerInterface $targetPluginManager;
 
   /**
@@ -22,6 +30,12 @@ abstract class ModelPluginBase extends PluginBase implements ContainerFactoryPlu
     return $instance;
   }
 
+  /**
+   * Get the defined model URI.
+   *
+   * @return string
+   *   The model URI.
+   */
   public function getModelUri() : string {
     return $this->pluginDefinition['uri'];
   }
