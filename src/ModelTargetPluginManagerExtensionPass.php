@@ -7,7 +7,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
- *
+ * Compiler pass to add services for each model's derivatives targets.
  */
 class ModelTargetPluginManagerExtensionPass implements CompilerPassInterface {
 

@@ -2,8 +2,6 @@
 
 namespace Drupal\dgi_standard_derivative_examiner;
 
-use Drupal\file\FileInterface;
-use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 
 /**

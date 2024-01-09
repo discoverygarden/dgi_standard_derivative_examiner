@@ -5,7 +5,7 @@ namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative
 use Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner\ModelPluginBase;
 
 /**
- * Audio model.
+ * Audio model plugin.
  *
  * @DgiStandardDerivativeExaminerModel(
  *   id = "audio",

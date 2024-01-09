@@ -6,6 +6,9 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\dgi_standard_derivative_examiner\Annotation\DgiStandardDerivativeExaminerTarget;
 
+/**
+ * Target plugin manager service.
+ */
 class TargetPluginManager extends DefaultPluginManager implements TargetPluginManagerInterface {
 
   /**
@@ -23,6 +26,8 @@ class TargetPluginManager extends DefaultPluginManager implements TargetPluginMa
       TargetInterface::class,
       DgiStandardDerivativeExaminerTarget::class,
     );
+
+    $this->alterInfo("dgi_standard_derivative_examiner_{$type}_target_plugin_info");
   }
 
 }

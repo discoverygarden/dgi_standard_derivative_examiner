@@ -7,7 +7,7 @@ use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\dgi_standard_derivative_examiner\Annotation\DgiStandardDerivativeExaminerModel;
 
 /**
- *
+ * Model plugin manager service.
  */
 class ModelPluginManager extends DefaultPluginManager implements ModelPluginManagerInterface {
 
@@ -27,6 +27,7 @@ class ModelPluginManager extends DefaultPluginManager implements ModelPluginMana
     );
 
     $this->mapper = new ModelUriMapper($this);
+    $this->alterInfo('dgi_standard_derivative_examiner_model_plugin_info');
   }
 
   /**

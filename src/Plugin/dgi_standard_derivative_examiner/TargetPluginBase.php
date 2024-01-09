@@ -2,15 +2,13 @@
 
 namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner;
 
-use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Action\ActionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\dgi_standard_derivative_examiner\TargetInterface;
-use Drupal\islandora\ContextProvider\NodeContextProvider;
 use Drupal\islandora\IslandoraContextManager;
 use Drupal\islandora\IslandoraUtils;
-use Drupal\islandora\Plugin\Action\AbstractGenerateDerivativeBase;
-use Drupal\islandora\Plugin\ContextReaction\DerivativeReaction;
+use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
 use Drupal\taxonomy\TermInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -31,6 +29,13 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
   protected IslandoraUtils $utils;
 
   /**
+   * The source term.
+   *
+   * @var \Drupal\taxonomy\TermInterface
+   */
+  protected TermInterface $sourceTerm;
+
+  /**
    * The term for this target.
    *
    * @var \Drupal\taxonomy\TermInterface
@@ -45,11 +50,11 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
   protected IslandoraContextManager $contextManager;
 
   /**
-   * The action storage service.
+   * The derivative action.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Action\ActionInterface|null
    */
-  protected EntityStorageInterface $actionStorage;
+  protected ?ActionInterface $action;
 
   /**
    * {@inheritDoc}
@@ -58,8 +63,9 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
     $instance = new static($configuration, $plugin_id, $plugin_definition);
 
     $instance->utils = $container->get('islandora.utils');
+    $instance->sourceTerm = $instance->utils->getTermForUri($plugin_definition['source_uri']);
     $instance->term = $instance->utils->getTermForUri($plugin_definition['uri']);
-    $instance->actionStorage = $container->get('entity_type.manager')->getStorage('action');
+    $instance->action = $container->get('entity_type.manager')->getStorage('action')->load($plugin_definition['default_plugin']);
 
     return $instance;
   }
@@ -68,8 +74,9 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    * {@inheritDoc}
    */
   public function expected(NodeInterface $node) : bool {
-    // In the majority of cases, we expect the defined items to exist.
-    return TRUE;
+    // In the majority of cases, we expect the defined items to exist, if the
+    // given source exists.
+    return (bool) $this->getSource($node);
   }
 
   /**
@@ -83,45 +90,20 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    * {@inheritDoc}
    */
   public function derive(NodeInterface $node) : void {
-    foreach ($this->getRelevantActions($node) as $action) {
-      $action->execute($node);
-    }
+    $this->action->execute($this->getSource($node));
   }
 
   /**
-   * Helper; identify those relevant actions from context.
+   * Helper; get the source media.
    *
    * @param \Drupal\node\NodeInterface $node
-   *   The node for which to obtain actions.
+   *   The node for which to obtain the source media.
    *
-   * @return \Generator
-   *   Generated applicable actions.
+   * @return \Drupal\media\MediaInterface|null
+   *   The source media if present; otherwise, NULL.
    */
-  protected function getRelevantActions(NodeInterface $node) {
-    $provider = new NodeContextProvider($node);
-    $provided = $provider->getRuntimeContexts([]);
-    $this->contextManager->evaluateContexts($provided);
-
-    foreach ($this->contextManager->getActiveReactions('derivative') as $reaction) {
-      if (!$reaction instanceof DerivativeReaction) {
-        continue;
-      }
-
-      $action_ids = $reaction->getConfiguration()['actions'];
-      $actions = $this->actionStorage->loadMultiple($action_ids);
-      foreach ($actions as $action) {
-        if (!$action instanceof AbstractGenerateDerivativeBase) {
-          continue;
-        }
-        $action_config = $action->getConfiguration();
-        if (
-          $action_config['derivative_term_uri'] === $this->getPluginDefinition()['uri'] &&
-          $action_config['destination_media_type'] === $this->getPluginDefinition()['type']
-        ) {
-          yield $action;
-        }
-      }
-    }
+  protected function getSource(NodeInterface $node) : ?MediaInterface {
+    return $this->utils->getMediaReferencingNodeAndTerm($node, $this->sourceTerm);
   }
 
 }

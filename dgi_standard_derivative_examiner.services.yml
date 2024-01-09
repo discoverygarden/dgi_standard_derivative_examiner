@@ -6,4 +6,3 @@ services:
   plugin.manager.dgi_standard_derivative_examiner.model:
     class: Drupal\dgi_standard_derivative_examiner\ModelPluginManager
     arguments: ['@container.namespaces', '@module_handler']
-

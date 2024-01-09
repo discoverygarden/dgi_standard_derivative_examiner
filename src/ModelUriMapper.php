@@ -11,6 +11,7 @@ class ModelUriMapper implements MapperInterface {
 
   /**
    * Memoized mapping of URIs to plugin IDs.
+   *
    * @var array
    */
   protected array $mapping = [];
