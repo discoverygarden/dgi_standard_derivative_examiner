@@ -103,7 +103,6 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    */
   public function exists(NodeInterface $node) : bool {
     $media = $this->utils->getMediaReferencingNodeAndTerm($node, $this->term);
-    var_dump($this->getPluginId(), $media);
     return !empty($media);
   }
 
