@@ -20,7 +20,7 @@ class TargetPluginManager extends DefaultPluginManager implements TargetPluginMa
     ModuleHandlerInterface $module_handler,
   ) {
     parent::__construct(
-      "Plugin/dgi_standard_derivative_examiner/model/{$type}",
+      "Plugin/dgi_standard_derivative_examiner/target/{$type}",
       $namespaces,
       $module_handler,
       TargetInterface::class,

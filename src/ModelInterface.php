@@ -2,10 +2,12 @@
 
 namespace Drupal\dgi_standard_derivative_examiner;
 
+use Drupal\Component\Plugin\PluginInspectionInterface;
+
 /**
  * Model interface.
  */
-interface ModelInterface {
+interface ModelInterface extends PluginInspectionInterface {
 
   /**
    * Get the defined model URI.

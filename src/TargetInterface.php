@@ -2,12 +2,13 @@
 
 namespace Drupal\dgi_standard_derivative_examiner;
 
+use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\node\NodeInterface;
 
 /**
  * Derivation target interface.
  */
-interface TargetInterface {
+interface TargetInterface extends PluginInspectionInterface {
 
   /**
    * Determine if the given derived target exists.
