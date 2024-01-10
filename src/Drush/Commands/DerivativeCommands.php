@@ -91,7 +91,6 @@ class DerivativeCommands extends DrushCommands {
             $node->id(),
             $uri,
             $model->getPluginId(),
-            $model->getPluginDefinition()['uri'],
             $target->getPluginId(),
             $target->getPluginDefinition()['uri'],
             $expected,
