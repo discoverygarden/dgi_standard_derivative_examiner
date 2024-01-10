@@ -13,7 +13,6 @@ use Drupal\islandora\Plugin\Action\AbstractGenerateDerivativeMediaFile;
 use Drupal\media\MediaInterface;
 use Drupal\media\MediaStorage;
 use Drupal\node\NodeInterface;
-use Drupal\system\ActionConfigEntityInterface;
 use Drupal\taxonomy\TermInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -80,8 +79,11 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
     $instance->sourceTerm = $instance->utils->getTermForUri($plugin_definition['source_uri']);
     $instance->term = $instance->utils->getTermForUri($plugin_definition['uri']);
     $instance->action = $plugin_definition['default_action'] ?
-      $entity_type_manager->getStorage('action')->load($plugin_definition['default_action'])->getPlugin():
+      $entity_type_manager->getStorage('action')->load($plugin_definition['default_action'])->getPlugin() :
       NULL;
+    if ($instance->action) {
+      assert($plugin_definition['uri'] === $instance->action->getConfiguration()['derivative_term_uri']);
+    }
     $instance->mediaStorage = $entity_type_manager->getStorage('media');
 
     return $instance;
@@ -100,7 +102,9 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    * {@inheritDoc}
    */
   public function exists(NodeInterface $node) : bool {
-    return !empty($this->utils->getMediaReferencingNodeAndTerm($node, $this->term));
+    $media = $this->utils->getMediaReferencingNodeAndTerm($node, $this->term);
+    var_dump($this->getPluginId(), $media);
+    return !empty($media);
   }
 
   /**

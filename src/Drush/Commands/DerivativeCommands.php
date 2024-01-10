@@ -2,6 +2,7 @@
 
 namespace Drupal\dgi_standard_derivative_examiner\Drush\Commands;
 
+use Consolidation\AnnotatedCommand\Attributes\HookSelector;
 use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\controlled_access_terms\Plugin\Field\FieldType\AuthorityLink;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -55,6 +56,7 @@ class DerivativeCommands extends DrushCommands {
    */
   #[CLI\Command(name: 'dgi-standard-derivative-examiner:derive', aliases: ['dsde:d'])]
   #[CLI\Option(name: 'dry-run', description: 'Flag to avoid making changes.')]
+  #[HookSelector(name: 'islandora-drush-utils-user-wrap')]
   public function derive(array $options = [
     'dry-run' => self::OPT,
   ]) : void {
@@ -71,7 +73,11 @@ class DerivativeCommands extends DrushCommands {
       foreach (static::getModelUri($node) as $uri) {
         $model = $this->modelPluginManager->createInstanceFromUri($uri);
         $targets = $model->getDerivativeTargets();
-        $this->logger()->debug('Found {uri} for {node} with {count} targets', ['node' => $node->id(), 'uri' => $uri, 'count' => count($targets)]);
+        $this->logger()->debug('Found {uri} for {node} with {count} targets', [
+          'node' => $node->id(),
+          'uri' => $uri,
+          'count' => count($targets),
+        ]);
         foreach ($targets as $target) {
           $expected = $target->expected($node);
           $exists = $target->exists($node);
@@ -91,9 +97,9 @@ class DerivativeCommands extends DrushCommands {
             $expected,
             $exists,
             (
-              $options['dry-run'] ?
-                ($to_trigger ? 'To trigger.' : 'No need to trigger.') :
-                ($to_trigger ? 'Triggered.' : 'No need to trigger.')
+              $to_trigger ?
+                ($options['dry-run'] ? 'To trigger.' : 'Triggered.') :
+                'No need to trigger.'
             ),
           ]);
         }
