@@ -64,7 +64,7 @@ class DerivativeCommands extends DrushCommands {
       $node_ids[] = $node_id;
     }
     /** @var \Drupal\node\NodeInterface[] $nodes */
-    $nodes = $this->nodeStorage->loadMultiple($node_ids);
+    $nodes = $this->nodeStorage->loadMultiple(array_filter(array_map('trim', $node_ids)));
 
     foreach ($nodes as $node) {
       $this->logger()->debug('Processing {node}', ['node' => $node->id()]);
@@ -85,6 +85,9 @@ class DerivativeCommands extends DrushCommands {
             $node->id(),
             $uri,
             $model->getPluginId(),
+            $model->getPluginDefinition()['uri'],
+            $target->getPluginId(),
+            $target->getPluginDefinition()['uri'],
             $expected,
             $exists,
             (

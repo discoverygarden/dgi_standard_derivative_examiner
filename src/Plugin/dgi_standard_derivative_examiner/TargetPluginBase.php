@@ -8,6 +8,8 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\dgi_standard_derivative_examiner\TargetInterface;
 use Drupal\islandora\IslandoraContextManager;
 use Drupal\islandora\IslandoraUtils;
+use Drupal\islandora\Plugin\Action\AbstractGenerateDerivative;
+use Drupal\islandora\Plugin\Action\AbstractGenerateDerivativeMediaFile;
 use Drupal\media\MediaInterface;
 use Drupal\media\MediaStorage;
 use Drupal\node\NodeInterface;
@@ -54,9 +56,9 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
   /**
    * The derivative action.
    *
-   * @var \Drupal\system\ActionConfigEntityInterface|null
+   * @var \Drupal\Core\Action\ActionInterface|null
    */
-  protected ?ActionConfigEntityInterface $action;
+  protected ?ActionInterface $action;
 
   /**
    * The media storage service.
@@ -78,7 +80,7 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
     $instance->sourceTerm = $instance->utils->getTermForUri($plugin_definition['source_uri']);
     $instance->term = $instance->utils->getTermForUri($plugin_definition['uri']);
     $instance->action = $plugin_definition['default_action'] ?
-      $entity_type_manager->getStorage('action')->load($plugin_definition['default_action']) :
+      $entity_type_manager->getStorage('action')->load($plugin_definition['default_action'])->getPlugin():
       NULL;
     $instance->mediaStorage = $entity_type_manager->getStorage('media');
 
@@ -105,7 +107,12 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    * {@inheritDoc}
    */
   public function derive(NodeInterface $node) : void {
-    $this->action->execute($this->getSource($node));
+    if ($this->action instanceof AbstractGenerateDerivative) {
+      $this->action->execute($node);
+    }
+    elseif ($this->action instanceof AbstractGenerateDerivativeMediaFile) {
+      $this->action->execute($this->getSource($node));
+    }
   }
 
   /**

@@ -8,7 +8,7 @@ use Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_exami
  * Video service file.
  *
  * @DgiStandardDerivativeExaminerTarget(
- *   id = "video.serivce_file",
+ *   id = "video.service_file",
  *   source_uri = "http://pcdm.org/use#OriginalFile",
  *   uri = "http://pcdm.org/use#ServiceFile",
  *   type = "video",
