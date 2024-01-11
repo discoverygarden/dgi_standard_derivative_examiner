@@ -5,7 +5,9 @@ namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\dgi_standard_derivative_examiner\ModelInterface;
+use Drupal\dgi_standard_derivative_examiner\TargetInterface;
 use Drupal\dgi_standard_derivative_examiner\TargetPluginManagerInterface;
+use Drupal\dgi_standard_derivative_examiner\UnknownTargetException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -58,6 +60,19 @@ abstract class ModelPluginBase extends PluginBase implements ContainerFactoryPlu
     }
 
     return $this->targets;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function getDerivativeTarget(array $options) : TargetInterface {
+    $target = $this->targetPluginManager->getInstance($options);
+
+    if (!$target) {
+      throw new UnknownTargetException($options);
+    }
+
+    return $target;
   }
 
 }
