@@ -30,4 +30,11 @@ class ModelPluginManager extends DefaultPluginManager implements ModelPluginMana
     $this->alterInfo('dgi_standard_derivative_examiner_model_plugin_info');
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function getFallbackPluginId($plugin_id, array $configuration = []) {
+    return '__undefined_model__';
+  }
+
 }

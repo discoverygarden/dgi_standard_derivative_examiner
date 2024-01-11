@@ -2,6 +2,7 @@
 
 namespace Drupal\dgi_standard_derivative_examiner;
 
+use Drupal\Component\Plugin\FallbackPluginManagerInterface;
 use Drupal\Component\Plugin\Mapper\MapperInterface;
 use Drupal\Component\Plugin\PluginManagerInterface;
 
@@ -41,6 +42,13 @@ class DefMapper implements MapperInterface {
 
         $this->mapping[$key] = $this->pluginManager->createInstance($id);
         break;
+      }
+
+      if (!isset($this->mapping[$key]) && $this->pluginManager instanceof FallbackPluginManagerInterface) {
+        $this->mapping[$key] = $this->pluginManager->createInstance(
+          $this->pluginManager->getFallbackPluginId($key),
+          $options,
+        );
       }
     }
 

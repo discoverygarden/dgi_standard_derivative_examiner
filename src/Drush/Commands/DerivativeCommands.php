@@ -7,6 +7,7 @@ use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\controlled_access_terms\Plugin\Field\FieldType\AuthorityLink;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\dgi_standard_derivative_examiner\ModelPluginManagerInterface;
+use Drupal\dgi_standard_derivative_examiner\UnknownModelException;
 use Drupal\islandora\IslandoraUtils;
 use Drupal\node\NodeInterface;
 use Drupal\node\NodeStorageInterface;
@@ -94,42 +95,59 @@ class DerivativeCommands extends DrushCommands {
         if (!$do_uri('model', $uri)) {
           continue;
         }
-        /** @var \Drupal\dgi_standard_derivative_examiner\ModelInterface $model */
-        $model = $this->modelPluginManager->getInstance(['uri' => $uri]);
-        $targets = $model->getDerivativeTargets();
-        $this->logger()->debug('Found {uri} for {node} with {count} targets', [
-          'node' => $node->id(),
-          'uri' => $uri,
-          'count' => count($targets),
-        ]);
-        foreach ($targets as $target) {
-          if (
-            !$do_uri('source-use', $target->getPluginDefinition()['source_uri']) ||
-            !$do_uri('dest-use', $target->getPluginDefinition()['uri'])
-          ) {
-            continue;
-          }
-          $expected = $target->expected($node);
-          $exists = $target->exists($node);
-          $to_trigger = $expected && !$exists;
 
-          if (!$options['dry-run'] && $to_trigger) {
-            $target->derive($node);
-          }
+        try {
+          /** @var \Drupal\dgi_standard_derivative_examiner\ModelInterface $model */
+          $model = $this->modelPluginManager->getInstance(['uri' => $uri]);
 
-          fputcsv(STDOUT, [
-            $node->id(),
-            $uri,
-            $model->getPluginId(),
-            $target->getPluginId(),
-            $target->getPluginDefinition()['uri'],
-            $expected,
-            $exists,
-            (
+          $targets = $model->getDerivativeTargets();
+          $this->logger()
+            ->debug('Found {uri} for {node} with {count} targets', [
+              'node' => $node->id(),
+              'uri' => $uri,
+              'count' => count($targets),
+            ]);
+          foreach ($targets as $target) {
+            if (
+              !$do_uri('source-use', $target->getPluginDefinition()['source_uri']) ||
+              !$do_uri('dest-use', $target->getPluginDefinition()['uri'])
+            ) {
+              continue;
+            }
+            $expected = $target->expected($node);
+            $exists = $target->exists($node);
+            $to_trigger = $expected && !$exists;
+
+            if (!$options['dry-run'] && $to_trigger) {
+              $target->derive($node);
+            }
+
+            fputcsv(STDOUT, [
+              $node->id(),
+              $uri,
+              $model->getPluginId(),
+              $target->getPluginId(),
+              $target->getPluginDefinition()['uri'],
+              $expected,
+              $exists,
+              (
               $to_trigger ?
                 ($options['dry-run'] ? 'To trigger.' : 'Triggered.') :
                 'No need to trigger.'
-            ),
+              ),
+            ]);
+          }
+        }
+        catch (UnknownModelException) {
+          fputcsv(STDOUT, [
+            $node->id(),
+            $uri,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            'Unknown model; unknown targets.',
           ]);
         }
       }
