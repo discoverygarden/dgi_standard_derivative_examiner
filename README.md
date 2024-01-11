@@ -45,7 +45,7 @@ drush sql:query "select nid from node where type = 'islandora_object';" > nodes.
 drush dgi-standard-derivative-examiner:derive --user=1 < nodes.csv
 ```
 
-Or, without spooling to a separate file, using [GNU Parallel] with two processes
+Or, without spooling to a separate file, using [GNU Parallel](https://www.gnu.org/software/parallel/) with two processes
 each processing 100 items at a time:
 
 ```bash
