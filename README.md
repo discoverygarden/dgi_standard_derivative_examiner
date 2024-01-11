@@ -16,6 +16,23 @@ Install as usual, see
 [this](https://www.drupal.org/docs/extending-drupal/installing-modules) for
 further information.
 
+## Usage
+
+The `dgi-standard-derivative-examiner:derive` command accepts a CSV-like structure with the first column representing the node IDs to process. Patterns of execution might look like:
+
+```bash
+drush sql:query "select nid from node where type = 'islandora_object';" > nodes.csv
+drush dgi-standard-derivative-examiner:derive --user=1 < nodes.csv
+```
+
+Or, without spooling to a separate file, using [GNU Parallel] with two processes:
+
+```bash
+# --pipe's interactions with --max-args is less-than straight-forward, seemingly
+# processing up to --block's value (which defaults to 1M) per process
+drush sql:query "select nid from node where type = 'islandora_object';" | parallel --pipe --max-args 100 --block 400 -j2 drush dgi-standard-derivative-examiner:derive --user=1
+```
+
 ## Troubleshooting/Issues
 
 Having problems or solved a problem? Contact

@@ -21,6 +21,13 @@ abstract class ModelPluginBase extends PluginBase implements ContainerFactoryPlu
   protected TargetPluginManagerInterface $targetPluginManager;
 
   /**
+   * Memoized target plugins.
+   *
+   * @var \Drupal\dgi_standard_derivative_examiner\TargetInterface[]
+   */
+  protected array $targets;
+
+  /**
    * {@inheritDoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -42,13 +49,15 @@ abstract class ModelPluginBase extends PluginBase implements ContainerFactoryPlu
    * {@inheritDoc}
    */
   public function getDerivativeTargets() : array {
-    $targets = [];
+    if (!isset($this->targets)) {
+      $this->targets = [];
 
-    foreach (array_keys($this->targetPluginManager->getDefinitions()) as $id) {
-      $targets[$id] = $this->targetPluginManager->createInstance($id);
+      foreach (array_keys($this->targetPluginManager->getDefinitions()) as $id) {
+        $this->targets[$id] = $this->targetPluginManager->createInstance($id);
+      }
     }
 
-    return $targets;
+    return $this->targets;
   }
 
 }

@@ -26,15 +26,8 @@ class ModelPluginManager extends DefaultPluginManager implements ModelPluginMana
       DgiStandardDerivativeExaminerModel::class,
     );
 
-    $this->mapper = new ModelUriMapper($this);
+    $this->mapper = new DefMapper($this);
     $this->alterInfo('dgi_standard_derivative_examiner_model_plugin_info');
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  public function createInstanceFromUri(string $uri) : ModelInterface {
-    return $this->getInstance(['uri' => $uri]);
   }
 
 }

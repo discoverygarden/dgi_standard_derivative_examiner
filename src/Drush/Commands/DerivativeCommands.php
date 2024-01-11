@@ -56,22 +56,46 @@ class DerivativeCommands extends DrushCommands {
    */
   #[CLI\Command(name: 'dgi-standard-derivative-examiner:derive', aliases: ['dsde:d'])]
   #[CLI\Option(name: 'dry-run', description: 'Flag to avoid making changes.')]
+  #[CLI\Option(name: 'model-uri', description: 'One (or more, comma-separated) model URIs to which to filter.')]
+  #[CLI\Option(name: 'source-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
+  #[CLI\Option(name: 'dest-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
   #[HookSelector(name: 'islandora-drush-utils-user-wrap')]
   public function derive(array $options = [
     'dry-run' => self::OPT,
+    'model-uri' => self::REQ,
+    'source-use-uri' => self::REQ,
+    'dest-use-uri' => self::REQ,
   ]) : void {
     $node_ids = [];
     while ($row = fgetcsv(STDIN)) {
       [$node_id] = $row;
       $node_ids[] = $node_id;
     }
+
+    $parse_uris = function (string $key) use ($options) : array {
+      $uris = array_map('trim', explode(',', $options[$key]));
+      return array_combine($uris, $uris);
+    };
+
+    $uris['model'] = isset($options['model-uri']) ? $parse_uris('model-uri') : [];
+    $uris['source-use'] = isset($options['source-use-uri']) ? $parse_uris('source-use-uri') : [];
+    $uris['dest-use'] = isset($options['dest-use-uri']) ? $parse_uris('dest-use-uri') : [];
+
+    $do_uri = function (string $type, string $uri) use ($uris, $options) {
+      return !isset($options["{$type}-uri"]) || array_key_exists($uri, $uris[$type]);
+    };
+
     /** @var \Drupal\node\NodeInterface[] $nodes */
     $nodes = $this->nodeStorage->loadMultiple(array_filter(array_map('trim', $node_ids)));
 
     foreach ($nodes as $node) {
       $this->logger()->debug('Processing {node}', ['node' => $node->id()]);
       foreach (static::getModelUri($node) as $uri) {
-        $model = $this->modelPluginManager->createInstanceFromUri($uri);
+        if (!$do_uri('model', $uri)) {
+          continue;
+        }
+        /** @var \Drupal\dgi_standard_derivative_examiner\ModelInterface $model */
+        $model = $this->modelPluginManager->getInstance(['uri' => $uri]);
         $targets = $model->getDerivativeTargets();
         $this->logger()->debug('Found {uri} for {node} with {count} targets', [
           'node' => $node->id(),
@@ -79,6 +103,12 @@ class DerivativeCommands extends DrushCommands {
           'count' => count($targets),
         ]);
         foreach ($targets as $target) {
+          if (
+            !$do_uri('source-use', $target->getPluginDefinition()['source_uri']) ||
+            !$do_uri('dest-use', $target->getPluginDefinition()['uri'])
+          ) {
+            continue;
+          }
           $expected = $target->expected($node);
           $exists = $target->exists($node);
           $to_trigger = $expected && !$exists;

@@ -27,6 +27,7 @@ class TargetPluginManager extends DefaultPluginManager implements TargetPluginMa
       DgiStandardDerivativeExaminerTarget::class,
     );
 
+    $this->mapper = new DefMapper($this);
     $this->alterInfo("dgi_standard_derivative_examiner_{$type}_target_plugin_info");
   }
 
