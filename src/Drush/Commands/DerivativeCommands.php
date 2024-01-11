@@ -69,12 +69,6 @@ class DerivativeCommands extends DrushCommands {
     'dest-use-uri' => self::REQ,
     'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message',
   ]) : void {
-    $node_ids = [];
-    while ($row = fgetcsv(STDIN)) {
-      [$node_id] = $row;
-      $node_ids[] = $node_id;
-    }
-
     $parse_uris = function (string $key) use ($options) : array {
       $uris = array_map('trim', explode(',', $options[$key]));
       return array_combine($uris, $uris);
@@ -101,16 +95,15 @@ class DerivativeCommands extends DrushCommands {
     ) use ($fields) {
       $row = [];
       foreach ($fields as $field) {
+        // XXX: Variable variable shenanigans, so yes, the doubled `$` is
+        // intentional.
         $row[] = $$field;
       }
 
       fputcsv(STDOUT, $row);
     };
 
-    /** @var \Drupal\node\NodeInterface[] $nodes */
-    $nodes = $this->nodeStorage->loadMultiple(array_filter(array_map('trim', $node_ids)));
-
-    foreach ($nodes as $node) {
+    foreach ($this->getNodes() as $node) {
       $this->logger()->debug('Processing {node}', ['node' => $node->id()]);
       foreach (static::getModelUri($node) as $uri) {
         if (!$do_uri('model', $uri)) {
@@ -169,6 +162,28 @@ class DerivativeCommands extends DrushCommands {
         }
       }
     }
+  }
+
+  /**
+   * Helper; load up the nodes.
+   *
+   * Reads all the rows passed via STDIN, expecting the first column to
+   * represent a node ID.
+   *
+   * Also, should be mockable, if necessary.
+   *
+   * @return \Drupal\node\NodeInterface[]
+   *   Array of nodes to process.
+   */
+  protected function getNodes() : array {
+    $node_ids = [];
+
+    while ($row = fgetcsv(STDIN)) {
+      [$node_id] = $row;
+      $node_ids[] = $node_id;
+    }
+
+    return $this->nodeStorage->loadMultiple(array_filter(array_map('trim', $node_ids)));
   }
 
   /**
