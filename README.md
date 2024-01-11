@@ -31,6 +31,8 @@ Options:
  --model-uri=MODEL-URI           One (or more, comma-separated) model URIs to which to filter.
  --source-use-uri=SOURCE-USE-URI One (or more, comma-separated) media use URIs to which to filter.
  --dest-use-uri=DEST-USE-URI     One (or more, comma-separated) media use URIs to which to filter.
+ --fields[=FIELDS]               Comma-separated listing of fields. [default:
+                                 nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message]
 --u, --user=USER                 The Drupal user as whom to run the command.
 
 [...]
@@ -57,6 +59,19 @@ There's a balance here somewhere between:
   - Likely related in some respect to the number of cores available for Drupal and the SQL server in general
 - The number of items per worker
   - bootstrapping each worker takes time, but Drupal has a habit of hanging on to loaded entities longer than expected, and we do not want the process to fail due to memory exhaustion. Might be safe-ish up to 1000, in most environments?
+
+The `dgi-standard-derivative-examiner:derive` command defaults to outputting CSV containing:
+- `nid`: the node ID
+- `model_uri`: the model URI processed for the node
+- `model_plugin`: the associated model plugin ID
+- `target_plugin`: the target plugin ID processed on the row
+- `target_uri`: the target/destination media use URI for the row
+- `expected`: a boolean, for if the target is expected
+  - generally, if the source "original file" exists, the target is expected to exist
+- `exists`: a boolean, for if the target _does_ exist
+- `message`: some descriptive text for the status of the row
+
+The four columns related to the targets are nullable, if a model is found to be in use by a node that does not have one of our plugins describing it.
 
 ## Troubleshooting/Issues
 

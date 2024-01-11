@@ -60,12 +60,14 @@ class DerivativeCommands extends DrushCommands {
   #[CLI\Option(name: 'model-uri', description: 'One (or more, comma-separated) model URIs to which to filter.')]
   #[CLI\Option(name: 'source-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
   #[CLI\Option(name: 'dest-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
+  #[CLI\Option(name: 'fields', description: 'Comma-separated listing of fields.')]
   #[HookSelector(name: 'islandora-drush-utils-user-wrap')]
   public function derive(array $options = [
     'dry-run' => self::OPT,
     'model-uri' => self::REQ,
     'source-use-uri' => self::REQ,
     'dest-use-uri' => self::REQ,
+    'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message',
   ]) : void {
     $node_ids = [];
     while ($row = fgetcsv(STDIN)) {
@@ -84,6 +86,25 @@ class DerivativeCommands extends DrushCommands {
 
     $do_uri = function (string $type, string $uri) use ($uris, $options) {
       return !isset($options["{$type}-uri"]) || array_key_exists($uri, $uris[$type]);
+    };
+
+    $fields = explode(',', $options['fields']);
+    $emit_row = function (
+      string $nid,
+      string $model_uri,
+      string $model_plugin,
+      ?string $target_plugin = NULL,
+      ?string $target_uri = NULL,
+      ?bool $expected = NULL,
+      ?bool $exists = NULL,
+      string $message = '',
+    ) use ($fields) {
+      $row = [];
+      foreach ($fields as $field) {
+        $row[] = $$field;
+      }
+
+      fputcsv(STDOUT, $row);
     };
 
     /** @var \Drupal\node\NodeInterface[] $nodes */
@@ -122,7 +143,7 @@ class DerivativeCommands extends DrushCommands {
               $target->derive($node);
             }
 
-            fputcsv(STDOUT, [
+            $emit_row(
               $node->id(),
               $uri,
               $model->getPluginId(),
@@ -135,20 +156,16 @@ class DerivativeCommands extends DrushCommands {
                 ($options['dry-run'] ? 'To trigger.' : 'Triggered.') :
                 'No need to trigger.'
               ),
-            ]);
+            );
           }
         }
         catch (UnknownModelException) {
-          fputcsv(STDOUT, [
+          $emit_row(
             $node->id(),
             $uri,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            NULL,
-            'Unknown model; unknown targets.',
-          ]);
+            'unknown',
+            message: 'Unknown model; unknown targets.',
+          );
         }
       }
     }
