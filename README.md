@@ -45,7 +45,7 @@ drush sql:query "select nid from node where type = 'islandora_object';" > nodes.
 drush dgi-standard-derivative-examiner:derive --user=1 < nodes.csv
 ```
 
-Or, without spooling to a separate file, using [GNU Parallel](https://www.gnu.org/software/parallel/) with two processes
+Or, without spooling to a separate file, using [GNU Parallel] with two processes
 each processing 100 items at a time:
 
 ```bash
@@ -63,7 +63,7 @@ There's a balance here somewhere between:
 Having problems or solved a problem? Contact
 [discoverygarden](http://support.discoverygarden.ca).
 
-GNU parallel's `--csv` mode appears to break the use of `--max-args`,
+[GNU parallel]'s `--csv` mode appears to break the use of `--max-args`,
 necessitating the use of `--block` to limit how much work each spawned child
 process receives; otherwise, each apparently receives the default `--block` size
 of `1M`.
@@ -83,3 +83,5 @@ and contact [discoverygarden](http://support.discoverygarden.ca).
 ## License
 
 [GPLv3](http://www.gnu.org/licenses/gpl-3.0.txt)
+
+[GNU parallel]: https://www.gnu.org/software/parallel/
