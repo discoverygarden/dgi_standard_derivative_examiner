@@ -152,7 +152,7 @@ class Examiner implements ExaminerInterface {
     if (!isset($this->originalFileTerm)) {
       $this->originalFileTerm = $this->islandoraUtils->getTermForUri('http://pcdm.org/use#OriginalFile');
       if (!$this->originalFileTerm) {
-        throw new \LogicException('Missing original file taxnonomy term!');
+        throw new \LogicException('Missing original file taxonomy term!');
       }
     }
 

@@ -1,4 +1,8 @@
+---
 services:
   dgi_standard_derivative_examiner.examiner:
     class: Drupal\dgi_standard_derivative_examiner\Utility\Examiner
     arguments: ['@entity_type.manager', '@islandora.utils']
+  plugin.manager.dgi_standard_derivative_examiner.model:
+    class: Drupal\dgi_standard_derivative_examiner\ModelPluginManager
+    arguments: ['@container.namespaces', '@module_handler']
