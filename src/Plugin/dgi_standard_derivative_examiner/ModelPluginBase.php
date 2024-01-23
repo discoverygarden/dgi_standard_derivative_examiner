@@ -2,6 +2,7 @@
 
 namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\dgi_standard_derivative_examiner\ModelInterface;
@@ -35,7 +36,9 @@ abstract class ModelPluginBase extends PluginBase implements ContainerFactoryPlu
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
 
-    $instance->targetPluginManager = $container->get("plugin.manager.dgi_standard_derivative_examiner.target.{$plugin_id}");
+    $instance->targetPluginManager = is_a($plugin_definition['targetManagerClass'], ContainerInjectionInterface::class, TRUE) ?
+       $plugin_definition['targetManagerClass']::create($container, $plugin_id) :
+       new $plugin_definition['targetManagerClass']($plugin_id);
 
     return $instance;
   }
