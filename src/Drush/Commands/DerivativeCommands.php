@@ -62,13 +62,15 @@ class DerivativeCommands extends DrushCommands {
   #[CLI\Option(name: 'dest-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
   #[CLI\Option(name: 'fields', description: 'Comma-separated listing of fields.')]
   #[HookSelector(name: 'islandora-drush-utils-user-wrap')]
-  public function derive(array $options = [
-    'dry-run' => self::OPT,
-    'model-uri' => self::REQ,
-    'source-use-uri' => self::REQ,
-    'dest-use-uri' => self::REQ,
-    'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message',
-  ]) : void {
+  public function derive(
+    array $options = [
+      'dry-run' => self::OPT,
+      'model-uri' => self::REQ,
+      'source-use-uri' => self::REQ,
+      'dest-use-uri' => self::REQ,
+      'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message',
+    ],
+  ) : void {
     $parse_uris = function (string $key) use ($options) : array {
       $uris = array_map('trim', explode(',', $options[$key]));
       return array_combine($uris, $uris);
