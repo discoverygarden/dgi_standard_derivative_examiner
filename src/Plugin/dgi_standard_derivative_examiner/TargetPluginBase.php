@@ -3,7 +3,6 @@
 namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner;
 
 use Drupal\Core\Action\ActionInterface;
-use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\dgi_standard_derivative_examiner\Exception\SourceException;
