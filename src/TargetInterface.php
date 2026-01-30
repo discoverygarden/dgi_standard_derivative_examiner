@@ -22,6 +22,17 @@ interface TargetInterface extends PluginInspectionInterface {
   public function exists(NodeInterface $node) : bool;
 
   /**
+   * Determine if the given source exists and is readable.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The node to check.
+   *
+   * @return bool
+   *   TRUE if the source file exists and is readable; otherwise, FALSE.
+   */
+  public function sourceExists(NodeInterface $node) : bool;
+
+  /**
    * Given a node, check if we expect the given derivative to exist.
    *
    * @param \Drupal\node\NodeInterface $node

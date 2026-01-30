@@ -6,6 +6,7 @@ use Drupal\Core\Action\ActionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\dgi_standard_derivative_examiner\TargetInterface;
+use Drupal\file\FileStorageInterface;
 use Drupal\islandora\IslandoraContextManager;
 use Drupal\islandora\IslandoraUtils;
 use Drupal\islandora\Plugin\Action\AbstractGenerateDerivative;
@@ -41,9 +42,9 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
   /**
    * The term for this target.
    *
-   * @var \Drupal\taxonomy\TermInterface
+   * @var \Drupal\taxonomy\TermInterface|null
    */
-  protected TermInterface $term;
+  protected ?TermInterface $term;
 
   /**
    * Islandora's extended context manager service.
@@ -69,6 +70,13 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
   protected MediaStorage $mediaStorage;
 
   /**
+   * The file storage service.
+   *
+   * @var \Drupal\file\FileStorageInterface
+   */
+  protected FileStorageInterface $fileStorage;
+
+  /**
    * {@inheritDoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -79,12 +87,13 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
     $instance->sourceTerm = $instance->utils->getTermForUri($plugin_definition['source_uri']);
     $instance->term = $instance->utils->getTermForUri($plugin_definition['uri']);
     $instance->action = $plugin_definition['default_action'] ?
-      $entity_type_manager->getStorage('action')->load($plugin_definition['default_action'])->getPlugin() :
+      $entity_type_manager->getStorage('action')->load($plugin_definition['default_action'])?->getPlugin() :
       NULL;
     if ($instance->action) {
       assert($plugin_definition['uri'] === $instance->action->getConfiguration()['derivative_term_uri']);
     }
     $instance->mediaStorage = $entity_type_manager->getStorage('media');
+    $instance->fileStorage = $entity_type_manager->getStorage('file');
 
     return $instance;
   }
@@ -95,15 +104,32 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
   public function expected(NodeInterface $node) : bool {
     // In the majority of cases, we expect the defined items to exist, if the
     // given source exists.
-    return (bool) $this->getSource($node);
+    return $this->term && $this->getSource($node);
   }
 
   /**
    * {@inheritDoc}
    */
   public function exists(NodeInterface $node) : bool {
+    if (!$this->term) {
+      return FALSE;
+    }
     $media = $this->utils->getMediaReferencingNodeAndTerm($node, $this->term);
     return !empty($media);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function sourceExists(NodeInterface $node) : bool {
+    if ($source = $this->getSource($node)) {
+      $fid = $source->getSource()->getSourceFieldValue($source);
+      if (!$fid || !($file = $this->fileStorage->load($fid))) {
+        return FALSE;
+      }
+      return file_exists($file->getFileUri()) && is_readable($file->getFileUri()) && $file->getSize() > 0;
+    }
+    return FALSE;
   }
 
   /**

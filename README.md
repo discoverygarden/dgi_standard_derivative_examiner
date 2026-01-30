@@ -33,6 +33,7 @@ Options:
  --dest-use-uri=DEST-USE-URI     One (or more, comma-separated) media use URIs to which to filter.
  --fields[=FIELDS]               Comma-separated listing of fields. [default:
                                  nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message]
+ --force[=FORCE]                 Flag to force derivation even if the derivative exists.
 --u, --user=USER                 The Drupal user as whom to run the command.
 
 [...]
@@ -68,7 +69,8 @@ The `dgi-standard-derivative-examiner:derive` command defaults to outputting CSV
 - `target_uri`: the target/destination media use URI for the row
 - `expected`: a boolean, for if the target is expected
   - generally, if the source "original file" exists, the target is expected to exist
-- `exists`: a boolean, for if the target _does_ exist
+- `target_exists`: a boolean, for if the target _does_ exist
+- `source_exists`: a boolean, for if the source exists and is readable
 - `message`: some descriptive text for the status of the row
 
 The four columns related to the targets are nullable, if a model is found to be in use by a node that does not have one of our plugins describing it.
