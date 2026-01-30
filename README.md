@@ -33,7 +33,7 @@ Options:
  --dest-use-uri=DEST-USE-URI     One (or more, comma-separated) media use URIs to which to filter.
  --fields[=FIELDS]               Comma-separated listing of fields. [default:
                                  nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message]
- --force[=FORCE]                 Flag to force derivation even if the derivative exists.
+ --force[=FORCE]                 Flag to force triggering derivative action even if the derivative exists.
 --u, --user=USER                 The Drupal user as whom to run the command.
 
 [...]

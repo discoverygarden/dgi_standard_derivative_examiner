@@ -63,7 +63,7 @@ class DerivativeCommands extends DrushCommands {
   #[CLI\Option(name: 'source-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
   #[CLI\Option(name: 'dest-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
   #[CLI\Option(name: 'fields', description: 'Comma-separated listing of fields.')]
-  #[CLI\Option(name: 'force', description: 'Flag to force derivation even if the derivative exists.')]
+  #[CLI\Option(name: 'force', description: 'Flag to force triggering derivative action even if the derivative exists.')]
   #[HookSelector(name: 'islandora-drush-utils-user-wrap')]
   public function derive(
     array $options = [
