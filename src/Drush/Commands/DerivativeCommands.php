@@ -8,7 +8,7 @@ use Drupal\controlled_access_terms\Plugin\Field\FieldType\AuthorityLink;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\dgi_standard_derivative_examiner\Exception\SourceException;
 use Drupal\dgi_standard_derivative_examiner\ModelPluginManagerInterface;
-use Drupal\dgi_standard_derivative_examiner\src\Exception\TargetTermAbsentException;
+use Drupal\dgi_standard_derivative_examiner\Exception\TargetTermAbsentException;
 use Drupal\dgi_standard_derivative_examiner\UnknownModelException;
 use Drupal\islandora\IslandoraUtils;
 use Drupal\node\NodeInterface;

@@ -6,7 +6,7 @@ use Drupal\Core\Action\ActionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\dgi_standard_derivative_examiner\Exception\SourceException;
-use Drupal\dgi_standard_derivative_examiner\src\Exception\TargetTermAbsentException;
+use Drupal\dgi_standard_derivative_examiner\Exception\TargetTermAbsentException;
 use Drupal\dgi_standard_derivative_examiner\TargetInterface;
 use Drupal\file\FileStorageInterface;
 use Drupal\islandora\IslandoraContextManager;
