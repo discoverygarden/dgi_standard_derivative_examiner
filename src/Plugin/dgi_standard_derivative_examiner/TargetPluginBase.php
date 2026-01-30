@@ -3,8 +3,11 @@
 namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner;
 
 use Drupal\Core\Action\ActionInterface;
+use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\dgi_standard_derivative_examiner\Exception\SourceException;
+use Drupal\dgi_standard_derivative_examiner\src\Exception\TargetTermAbsentException;
 use Drupal\dgi_standard_derivative_examiner\TargetInterface;
 use Drupal\file\FileStorageInterface;
 use Drupal\islandora\IslandoraContextManager;
@@ -104,7 +107,10 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
   public function expected(NodeInterface $node) : bool {
     // In the majority of cases, we expect the defined items to exist, if the
     // given source exists.
-    return $this->term && $this->getSource($node);
+    if (!$this->term) {
+      throw new TargetTermAbsentException(uri: $this->getPluginDefinition()['uri'] ?? '(unknown URI)');
+    }
+    return (bool) $this->getSource($node);
   }
 
   /**
@@ -112,7 +118,7 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    */
   public function exists(NodeInterface $node) : bool {
     if (!$this->term) {
-      return FALSE;
+      throw new TargetTermAbsentException(uri: $this->getPluginDefinition()['uri'] ?? '(unknown URI)');
     }
     $media = $this->utils->getMediaReferencingNodeAndTerm($node, $this->term);
     return !empty($media);
@@ -122,14 +128,29 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    * {@inheritDoc}
    */
   public function sourceExists(NodeInterface $node) : bool {
-    if ($source = $this->getSource($node)) {
-      $fid = $source->getSource()->getSourceFieldValue($source);
-      if (!$fid || !($file = $this->fileStorage->load($fid))) {
-        return FALSE;
-      }
-      return file_exists($file->getFileUri()) && is_readable($file->getFileUri()) && $file->getSize() > 0;
+    if (!($source_media = $this->getSource($node))) {
+      return FALSE;
     }
-    return FALSE;
+
+    $fid = $source_media->getSource()->getSourceFieldValue($source_media);
+    /** @var \Drupal\file\FileInterface|null $file */
+    if (!$fid) {
+      throw new SourceException("Media source property appears empty (media ID: {$source_media->id()}).", media: $source_media);
+    }
+    if (!($file = $this->fileStorage->load($fid))) {
+      throw new SourceException("Failed to load source file entity ({$fid}) referenced by media property.", media: $source_media);
+    }
+    if (!file_exists($file->getFileUri())) {
+      throw new SourceException("Source file does not appear to exist (ID: {$fid}; URI: {$file->getFileUri()}).", media: $source_media);
+    }
+    if (!is_readable($file->getFileUri())) {
+      throw new SourceException("Source file does not appear to be readable (ID: {$fid}; URI: {$file->getFileUri()}).", media: $source_media);
+    }
+    if ($file->getSize() <= 0) {
+      throw new SourceException("Source file appears to be empty (ID: {$fid}; URI: {$file->getFileUri()}).", media: $source_media);
+    }
+
+    return TRUE;
   }
 
   /**

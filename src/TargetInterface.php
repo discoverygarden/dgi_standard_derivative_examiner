@@ -18,6 +18,9 @@ interface TargetInterface extends PluginInspectionInterface {
    *
    * @return bool
    *   TRUE if the derived file exists; otherwise, FALSE.
+   *
+   * @throws \Drupal\dgi_standard_derivative_examiner\src\Exception\TargetTermAbsentException
+   *   Thrown when a term describing the target derivative could not be found.
    */
   public function exists(NodeInterface $node) : bool;
 
@@ -29,6 +32,9 @@ interface TargetInterface extends PluginInspectionInterface {
    *
    * @return bool
    *   TRUE if the source file exists and is readable; otherwise, FALSE.
+   *
+   * @throws \Drupal\dgi_standard_derivative_examiner\Exception\SourceException
+   *   Thrown when there is an exceptional state detected with the given source.
    */
   public function sourceExists(NodeInterface $node) : bool;
 
@@ -40,6 +46,9 @@ interface TargetInterface extends PluginInspectionInterface {
    *
    * @return bool
    *   TRUE if there should be a derivative; otherwise, FALSE.
+   *
+   * @throws \Drupal\dgi_standard_derivative_examiner\src\Exception\TargetTermAbsentException
+   *   Thrown when a term describing the target derivative could not be found.
    */
   public function expected(NodeInterface $node) : bool;
 
