@@ -7,6 +7,7 @@ use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\controlled_access_terms\Plugin\Field\FieldType\AuthorityLink;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\dgi_standard_derivative_examiner\Exception\SourceException;
+use Drupal\dgi_standard_derivative_examiner\Exception\UnknownDerivativeTargetPlugin;
 use Drupal\dgi_standard_derivative_examiner\ModelPluginManagerInterface;
 use Drupal\dgi_standard_derivative_examiner\Exception\TargetTermAbsentException;
 use Drupal\dgi_standard_derivative_examiner\UnknownModelException;
@@ -64,6 +65,7 @@ class DerivativeCommands extends DrushCommands {
   #[CLI\Option(name: 'dest-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
   #[CLI\Option(name: 'fields', description: 'Comma-separated listing of fields.')]
   #[CLI\Option(name: 'force', description: 'Flag to force triggering derivative action even if the derivative exists.')]
+  #[CLI\Option(name: 'output-header', description: 'Flag, output header CSV row.')]
   #[HookSelector(name: 'islandora-drush-utils-user-wrap')]
   public function derive(
     array $options = [
@@ -71,8 +73,9 @@ class DerivativeCommands extends DrushCommands {
       'model-uri' => self::REQ,
       'source-use-uri' => self::REQ,
       'dest-use-uri' => self::REQ,
-      'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message',
+      'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,source_exists,message',
       'force' => self::OPT,
+      'output-header' => TRUE,
     ],
   ) : void {
     $parse_uris = static function (string $key) use ($options) : array {
@@ -89,6 +92,9 @@ class DerivativeCommands extends DrushCommands {
     };
 
     $fields = explode(',', $options['fields']);
+    if ($options['output-header']) {
+      fputcsv(STDOUT, $fields);
+    }
     $emit_row = static function (
       string $nid,
       string $model_uri,
@@ -165,7 +171,7 @@ class DerivativeCommands extends DrushCommands {
                 $exists => 'No need to trigger as the derivative exists.',
               };
             }
-            catch (TargetTermAbsentException | SourceException $e) {
+            catch (TargetTermAbsentException | SourceException | UnknownDerivativeTargetPlugin $e) {
               $trigger_message = $e->getMessage();
             }
             catch (\Exception $e) {

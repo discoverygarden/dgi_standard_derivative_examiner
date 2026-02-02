@@ -3,10 +3,12 @@
 namespace Drupal\dgi_standard_derivative_examiner\Plugin\dgi_standard_derivative_examiner;
 
 use Drupal\Core\Action\ActionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\dgi_standard_derivative_examiner\Exception\SourceException;
 use Drupal\dgi_standard_derivative_examiner\Exception\TargetTermAbsentException;
+use Drupal\dgi_standard_derivative_examiner\Exception\UnknownDerivativeTargetPlugin;
 use Drupal\dgi_standard_derivative_examiner\TargetInterface;
 use Drupal\file\FileStorageInterface;
 use Drupal\islandora\IslandoraContextManager;
@@ -158,10 +160,13 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
   public function derive(NodeInterface $node) : void {
     if ($this->action instanceof AbstractGenerateDerivative) {
       $this->action->execute($node);
+      return;
     }
-    elseif ($this->action instanceof AbstractGenerateDerivativeMediaFile) {
+    if ($this->action instanceof AbstractGenerateDerivativeMediaFile) {
       $this->action->execute($this->getSource($node));
+      return;
     }
+    throw new UnknownDerivativeTargetPlugin(action: $this->action);
   }
 
   /**

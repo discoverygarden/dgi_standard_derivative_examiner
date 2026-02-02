@@ -69,7 +69,7 @@ The `dgi-standard-derivative-examiner:derive` command defaults to outputting CSV
 - `target_uri`: the target/destination media use URI for the row
 - `expected`: a boolean, for if the target is expected
   - generally, if the source "original file" exists, the target is expected to exist
-- `target_exists`: a boolean, for if the target _does_ exist
+- `exists`: a boolean, for if the target _does_ exist
 - `source_exists`: a boolean, for if the source exists and is readable
 - `message`: some descriptive text for the status of the row
 
