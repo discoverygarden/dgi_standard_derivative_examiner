@@ -73,7 +73,7 @@ class DerivativeCommands extends DrushCommands {
       'dest-use-uri' => self::REQ,
       'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message',
       'force' => FALSE,
-      'output-header' => TRUE,
+      'output-header' => FALSE,
     ],
   ) : void {
     $parse_uris = static function (string $key) use ($options) : array {
