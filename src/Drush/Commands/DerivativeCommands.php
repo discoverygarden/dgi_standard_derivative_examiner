@@ -6,11 +6,8 @@ use Consolidation\AnnotatedCommand\Attributes\HookSelector;
 use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\controlled_access_terms\Plugin\Field\FieldType\AuthorityLink;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\dgi_standard_derivative_examiner\Exception\DerivativeExaminerException;
-use Drupal\dgi_standard_derivative_examiner\Exception\SourceException;
-use Drupal\dgi_standard_derivative_examiner\Exception\UnknownDerivativeTargetPlugin;
+use Drupal\dgi_standard_derivative_examiner\Exception\DerivativeExaminerTargetException;
 use Drupal\dgi_standard_derivative_examiner\ModelPluginManagerInterface;
-use Drupal\dgi_standard_derivative_examiner\Exception\TargetTermAbsentException;
 use Drupal\dgi_standard_derivative_examiner\UnknownModelException;
 use Drupal\islandora\IslandoraUtils;
 use Drupal\node\NodeInterface;
@@ -70,12 +67,12 @@ class DerivativeCommands extends DrushCommands {
   #[HookSelector(name: 'islandora-drush-utils-user-wrap')]
   public function derive(
     array $options = [
-      'dry-run' => self::OPT,
+      'dry-run' => FALSE,
       'model-uri' => self::REQ,
       'source-use-uri' => self::REQ,
       'dest-use-uri' => self::REQ,
-      'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,source_exists,message',
-      'force' => self::OPT,
+      'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message',
+      'force' => FALSE,
       'output-header' => TRUE,
     ],
   ) : void {
@@ -104,7 +101,6 @@ class DerivativeCommands extends DrushCommands {
       ?string $target_uri = NULL,
       ?bool $expected = NULL,
       ?bool $exists = NULL,
-      ?bool $source_exists = NULL,
       string $message = '',
     ) use ($fields) {
       $row = [];
@@ -144,13 +140,12 @@ class DerivativeCommands extends DrushCommands {
             }
 
             // Initialize vars.
-            $expected = $exists = $source_exists = NULL;
+            $expected = $exists = NULL;
 
             try {
               $expected = $target->expected($node);
               $exists = $target->exists($node);
-              $source_exists = $target->sourceExists($node);
-              $to_trigger = $expected && $source_exists && (!$exists || $options['force']);
+              $to_trigger = $expected && (!$exists || $options['force']);
               if (!$options['dry-run'] && $to_trigger) {
                 $target->derive($node);
               }
@@ -168,11 +163,10 @@ class DerivativeCommands extends DrushCommands {
                   },
                 },
                 !$expected => 'No need to trigger as the derivative is not expected.',
-                !$source_exists => 'Unable to trigger as the source does not exist or is not readable.',
                 $exists => 'No need to trigger as the derivative exists.',
               };
             }
-            catch (DerivativeExaminerException $e) {
+            catch (DerivativeExaminerTargetException $e) {
               $trigger_message = $e->getMessage();
             }
             catch (\Exception $e) {
@@ -186,7 +180,6 @@ class DerivativeCommands extends DrushCommands {
               $target->getPluginDefinition()['uri'],
               $expected,
               $exists,
-              $source_exists,
               $trigger_message,
             );
           }

@@ -2,10 +2,12 @@
 
 namespace Drupal\dgi_standard_derivative_examiner\Exception;
 
+use Drupal\dgi_standard_derivative_examiner\TargetInterface;
+
 /**
  * Describe the absence of a term.
  */
-class TargetTermAbsentException extends DerivativeExaminerException {
+class TargetTermAbsentException extends DerivativeExaminerTargetException {
 
   /**
    * Constructor.
@@ -14,6 +16,7 @@ class TargetTermAbsentException extends DerivativeExaminerException {
     string $message = "",
     int $code = 0,
     ?\Throwable $previous = NULL,
+    ?TargetInterface $target = NULL,
     readonly public string $uri = '',
   ) {
     parent::__construct(
@@ -24,6 +27,7 @@ class TargetTermAbsentException extends DerivativeExaminerException {
       },
       $code,
       $previous,
+      $target,
     );
   }
 

@@ -108,7 +108,7 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
     // In the majority of cases, we expect the defined items to exist, if the
     // given source exists.
     if (!$this->term) {
-      throw new TargetTermAbsentException(uri: $this->getPluginDefinition()['uri'] ?? '(unknown URI)');
+      throw new TargetTermAbsentException(target: $this, uri: $this->getPluginDefinition()['uri'] ?? '(unknown URI)');
     }
     return (bool) $this->getSource($node);
   }
@@ -118,7 +118,7 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    */
   public function exists(NodeInterface $node) : bool {
     if (!$this->term) {
-      throw new TargetTermAbsentException(uri: $this->getPluginDefinition()['uri'] ?? '(unknown URI)');
+      throw new TargetTermAbsentException(target: $this, uri: $this->getPluginDefinition()['uri'] ?? '(unknown URI)');
     }
     $media = $this->utils->getMediaReferencingNodeAndTerm($node, $this->term);
     return !empty($media);
@@ -129,25 +129,45 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    */
   public function sourceExists(NodeInterface $node) : bool {
     if (!($source_media = $this->getSource($node))) {
-      return FALSE;
+      throw new SourceException("Failed to find source media.", target: $this);
     }
 
     $fid = $source_media->getSource()->getSourceFieldValue($source_media);
     /** @var \Drupal\file\FileInterface|null $file */
     if (!$fid) {
-      throw new SourceException("Media source property appears empty (media ID: {$source_media->id()}).", media: $source_media);
+      throw new SourceException(
+        "Media source property appears empty (media ID: {$source_media->id()}).",
+        target: $this,
+        media: $source_media,
+      );
     }
     if (!($file = $this->fileStorage->load($fid))) {
-      throw new SourceException("Failed to load source file entity ({$fid}) referenced by media property.", media: $source_media);
+      throw new SourceException(
+        "Failed to load source file entity ({$fid}) referenced by media property.",
+        target: $this,
+        media: $source_media,
+      );
     }
     if (!file_exists($file->getFileUri())) {
-      throw new SourceException("Source file does not appear to exist (ID: {$fid}; URI: {$file->getFileUri()}).", media: $source_media);
+      throw new SourceException(
+        "Source file does not appear to exist (ID: {$fid}; URI: {$file->getFileUri()}).",
+        target: $this,
+        media: $source_media,
+      );
     }
     if (!is_readable($file->getFileUri())) {
-      throw new SourceException("Source file does not appear to be readable (ID: {$fid}; URI: {$file->getFileUri()}).", media: $source_media);
+      throw new SourceException(
+        "Source file does not appear to be readable (ID: {$fid}; URI: {$file->getFileUri()}).",
+        target: $this,
+        media: $source_media,
+      );
     }
     if ($file->getSize() <= 0) {
-      throw new SourceException("Source file appears to be empty (ID: {$fid}; URI: {$file->getFileUri()}).", media: $source_media);
+      throw new SourceException(
+        "Source file appears to be empty (ID: {$fid}; URI: {$file->getFileUri()}).",
+        target: $this,
+        media: $source_media,
+      );
     }
 
     return TRUE;
@@ -157,6 +177,9 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
    * {@inheritDoc}
    */
   public function derive(NodeInterface $node) : void {
+    if (!$this->sourceExists($node)) {
+      throw new SourceException("Source to derive does not appear to exist.", target: $this);
+    }
     if ($this->action instanceof AbstractGenerateDerivative) {
       $this->action->execute($node);
       return;
@@ -165,7 +188,7 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
       $this->action->execute($this->getSource($node));
       return;
     }
-    throw new UnknownDerivativeTargetPlugin(action: $this->action);
+    throw new UnknownDerivativeTargetPlugin(target: $this, action: $this->action);
   }
 
   /**
