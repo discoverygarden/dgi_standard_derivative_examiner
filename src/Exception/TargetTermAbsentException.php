@@ -6,6 +6,8 @@ use Drupal\dgi_standard_derivative_examiner\TargetInterface;
 
 /**
  * Describe the absence of a term.
+ *
+ * @internal
  */
 class TargetTermAbsentException extends DerivativeExaminerTargetException {
 

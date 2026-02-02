@@ -9,6 +9,8 @@ use Drupal\dgi_standard_derivative_examiner\TargetInterface;
  * Unknown plugin, unknown how to invoke it.
  *
  * What parameters to pass?
+ *
+ * @internal
  */
 class UnknownDerivativeTargetPlugin extends DerivativeExaminerTargetException {
 

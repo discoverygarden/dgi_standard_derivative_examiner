@@ -7,6 +7,8 @@ use Drupal\media\MediaInterface;
 
 /**
  * Represent exceptional circumstances around source media.
+ *
+ * @internal
  */
 class SourceException extends DerivativeExaminerTargetException {
 

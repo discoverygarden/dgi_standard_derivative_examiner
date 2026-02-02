@@ -6,6 +6,8 @@ use Drupal\dgi_standard_derivative_examiner\TargetInterface;
 
 /**
  * General derivative examiner exceptions.
+ *
+ * @internal
  */
 abstract class DerivativeExaminerTargetException extends \RuntimeException {
 
