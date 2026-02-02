@@ -9,7 +9,7 @@ use Drupal\Core\Action\ActionInterface;
  *
  * What parameters to pass?
  */
-class UnknownDerivativeTargetPlugin extends \Exception {
+class UnknownDerivativeTargetPlugin extends DerivativeExaminerException {
 
   /**
    * Constructor.
@@ -18,7 +18,7 @@ class UnknownDerivativeTargetPlugin extends \Exception {
     string $message = "",
     int $code = 0,
     ?\Throwable $previous = NULL,
-    public readonly ?ActionInterface $action,
+    public readonly ?ActionInterface $action = NULL,
   ) {
     parent::__construct(
       $message ?: "Unknown derivative target {$this->action?->getPluginId()}.",

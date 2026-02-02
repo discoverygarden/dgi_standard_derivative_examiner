@@ -6,6 +6,7 @@ use Consolidation\AnnotatedCommand\Attributes\HookSelector;
 use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\controlled_access_terms\Plugin\Field\FieldType\AuthorityLink;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\dgi_standard_derivative_examiner\Exception\DerivativeExaminerException;
 use Drupal\dgi_standard_derivative_examiner\Exception\SourceException;
 use Drupal\dgi_standard_derivative_examiner\Exception\UnknownDerivativeTargetPlugin;
 use Drupal\dgi_standard_derivative_examiner\ModelPluginManagerInterface;
@@ -171,7 +172,7 @@ class DerivativeCommands extends DrushCommands {
                 $exists => 'No need to trigger as the derivative exists.',
               };
             }
-            catch (TargetTermAbsentException | SourceException | UnknownDerivativeTargetPlugin $e) {
+            catch (DerivativeExaminerException $e) {
               $trigger_message = $e->getMessage();
             }
             catch (\Exception $e) {

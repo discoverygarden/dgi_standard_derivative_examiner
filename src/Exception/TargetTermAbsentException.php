@@ -5,7 +5,7 @@ namespace Drupal\dgi_standard_derivative_examiner\Exception;
 /**
  * Describe the absence of a term.
  */
-class TargetTermAbsentException extends \Exception {
+class TargetTermAbsentException extends DerivativeExaminerException {
 
   /**
    * Constructor.
