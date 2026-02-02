@@ -33,8 +33,7 @@ Options:
  --dest-use-uri=DEST-USE-URI     One (or more, comma-separated) media use URIs to which to filter.
  --fields[=FIELDS]               Comma-separated listing of fields. [default: nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message]
  --force                         Flag to force triggering derivative action even if the derivative exists.
- --output-header[=OUTPUT-HEADER] Flag, output header CSV row. [default: true]
- --no-output-header              Negate --output-header option.
+ --output-header                 Flag, output header CSV row.
 --u, --user=USER                 The Drupal user as whom to run the command.
 
 [...]
