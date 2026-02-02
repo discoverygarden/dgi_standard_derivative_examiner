@@ -52,7 +52,7 @@ Or, without spooling to a separate file, using [GNU Parallel] with two processes
 each processing 100 items at a time:
 
 ```bash
-drush sql:query "select nid from node where type = 'islandora_object';" | parallel --pipe --max-args 100 -j2 drush dgi-standard-derivative-examiner:derive --user=1 --no-output-header
+drush sql:query "select nid from node where type = 'islandora_object';" | parallel --pipe --max-args 100 -j2 drush dgi-standard-derivative-examiner:derive --user=1
 ```
 
 There's a balance here somewhere between:
