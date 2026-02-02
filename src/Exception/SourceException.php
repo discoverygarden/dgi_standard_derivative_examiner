@@ -16,7 +16,7 @@ class SourceException extends \Exception {
     string $message = "",
     int $code = 0,
     ?\Throwable $previous = NULL,
-    readonly public MediaInterface $media,
+    readonly public ?MediaInterface $media = NULL,
   ) {
     parent::__construct($message, $code, $previous);
   }
