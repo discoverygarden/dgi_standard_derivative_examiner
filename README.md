@@ -27,13 +27,13 @@ Given node IDs on stdin, report on or derive derivatives.
 Outputs to STDOUT.
 
 Options:
- --dry-run[=DRY-RUN]             Flag to avoid making changes.
+ --dry-run                       Flag to avoid making changes.
  --model-uri=MODEL-URI           One (or more, comma-separated) model URIs to which to filter.
  --source-use-uri=SOURCE-USE-URI One (or more, comma-separated) media use URIs to which to filter.
  --dest-use-uri=DEST-USE-URI     One (or more, comma-separated) media use URIs to which to filter.
- --fields[=FIELDS]               Comma-separated listing of fields. [default:
-                                 nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message]
- --force[=FORCE]                 Flag to force derivation even if the derivative exists.
+ --fields[=FIELDS]               Comma-separated listing of fields. [default: nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message]
+ --force                         Flag to force triggering derivative action even if the derivative exists.
+ --output-header                 Flag, output header CSV row.
 --u, --user=USER                 The Drupal user as whom to run the command.
 
 [...]
@@ -69,8 +69,7 @@ The `dgi-standard-derivative-examiner:derive` command defaults to outputting CSV
 - `target_uri`: the target/destination media use URI for the row
 - `expected`: a boolean, for if the target is expected
   - generally, if the source "original file" exists, the target is expected to exist
-- `target_exists`: a boolean, for if the target _does_ exist
-- `source_exists`: a boolean, for if the source exists and is readable
+- `exists`: a boolean, for if the target _does_ exist
 - `message`: some descriptive text for the status of the row
 
 The four columns related to the targets are nullable, if a model is found to be in use by a node that does not have one of our plugins describing it.

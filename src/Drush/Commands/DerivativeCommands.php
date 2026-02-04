@@ -6,6 +6,7 @@ use Consolidation\AnnotatedCommand\Attributes\HookSelector;
 use Drupal\Component\DependencyInjection\ContainerInterface;
 use Drupal\controlled_access_terms\Plugin\Field\FieldType\AuthorityLink;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\dgi_standard_derivative_examiner\Exception\DerivativeExaminerTargetException;
 use Drupal\dgi_standard_derivative_examiner\ModelPluginManagerInterface;
 use Drupal\dgi_standard_derivative_examiner\UnknownModelException;
 use Drupal\islandora\IslandoraUtils;
@@ -61,19 +62,21 @@ class DerivativeCommands extends DrushCommands {
   #[CLI\Option(name: 'source-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
   #[CLI\Option(name: 'dest-use-uri', description: 'One (or more, comma-separated) media use URIs to which to filter.')]
   #[CLI\Option(name: 'fields', description: 'Comma-separated listing of fields.')]
-  #[CLI\Option(name: 'force', description: 'Flag to force derivation even if the derivative exists.')]
+  #[CLI\Option(name: 'force', description: 'Flag to force triggering derivative action even if the derivative exists.')]
+  #[CLI\Option(name: 'output-header', description: 'Flag, output header CSV row.')]
   #[HookSelector(name: 'islandora-drush-utils-user-wrap')]
   public function derive(
     array $options = [
-      'dry-run' => self::OPT,
+      'dry-run' => FALSE,
       'model-uri' => self::REQ,
       'source-use-uri' => self::REQ,
       'dest-use-uri' => self::REQ,
       'fields' => 'nid,model_uri,model_plugin,target_plugin,target_uri,expected,exists,message',
-      'force' => self::OPT,
+      'force' => FALSE,
+      'output-header' => FALSE,
     ],
   ) : void {
-    $parse_uris = function (string $key) use ($options) : array {
+    $parse_uris = static function (string $key) use ($options) : array {
       $uris = array_map('trim', explode(',', $options[$key]));
       return array_combine($uris, $uris);
     };
@@ -82,12 +85,15 @@ class DerivativeCommands extends DrushCommands {
     $uris['source-use'] = isset($options['source-use-uri']) ? $parse_uris('source-use-uri') : [];
     $uris['dest-use'] = isset($options['dest-use-uri']) ? $parse_uris('dest-use-uri') : [];
 
-    $do_uri = function (string $type, string $uri) use ($uris, $options) {
+    $do_uri = static function (string $type, string $uri) use ($uris, $options) {
       return !isset($options["{$type}-uri"]) || array_key_exists($uri, $uris[$type]);
     };
 
     $fields = explode(',', $options['fields']);
-    $emit_row = function (
+    if ($options['output-header']) {
+      fputcsv(STDOUT, $fields);
+    }
+    $emit_row = static function (
       string $nid,
       string $model_uri,
       string $model_plugin,
@@ -95,7 +101,6 @@ class DerivativeCommands extends DrushCommands {
       ?string $target_uri = NULL,
       ?bool $expected = NULL,
       ?bool $exists = NULL,
-      ?bool $source_exists = NULL,
       string $message = '',
     ) use ($fields) {
       $row = [];
@@ -133,33 +138,39 @@ class DerivativeCommands extends DrushCommands {
             ) {
               continue;
             }
-            $expected = $target->expected($node);
-            $exists = $target->exists($node);
-            $source_exists = $target->sourceExists($node);
-            $to_trigger = $expected && $source_exists && (!$exists || $options['force']);
-            if (!$options['dry-run'] && $to_trigger) {
-              $target->derive($node);
-            }
-            // Construct the trigger message to include whether it is to be
-            // triggered but include if the force flag was used.
-            if ($to_trigger) {
-              if ($options['dry-run']) {
-                $trigger_message = strtr('To trigger{force}.', [
-                  '{force}' => $options['force'] ? ' (forced)' : '',
-                ]);
+
+            // Initialize vars.
+            $expected = $exists = NULL;
+
+            try {
+              $expected = $target->expected($node);
+              $exists = $target->exists($node);
+              $to_trigger = $expected && (!$exists || $options['force']);
+              if (!$options['dry-run'] && $to_trigger) {
+                $target->derive($node);
               }
-              else {
-                $trigger_message = strtr('Triggered{force}.', [
-                  '{force}' => $options['force'] ? ' (forced)' : '',
-                ]);
-              }
-            }
-            else {
+              // Construct the trigger message to include whether it is to be
+              // triggered but include if the force flag was used.
               $trigger_message = match (TRUE) {
+                $to_trigger => match($options['dry-run']) {
+                  TRUE => match($options['force']) {
+                    TRUE => 'To trigger (forced).',
+                    FALSE => 'To trigger.',
+                  },
+                  FALSE => match($options['force']) {
+                    TRUE => 'Triggered (forced).',
+                    FALSE => 'Triggered.',
+                  },
+                },
                 !$expected => 'No need to trigger as the derivative is not expected.',
-                !$source_exists => 'Unable to trigger as the source does not exist or is not readable.',
                 $exists => 'No need to trigger as the derivative exists.',
               };
+            }
+            catch (DerivativeExaminerTargetException $e) {
+              $trigger_message = $e->getMessage();
+            }
+            catch (\Exception $e) {
+              $trigger_message = "An unexpected exception occurred: {$e->getMessage()}";
             }
             $emit_row(
               $node->id(),
@@ -169,10 +180,7 @@ class DerivativeCommands extends DrushCommands {
               $target->getPluginDefinition()['uri'],
               $expected,
               $exists,
-              $source_exists,
-              (
-              $trigger_message
-              ),
+              $trigger_message,
             );
           }
         }
