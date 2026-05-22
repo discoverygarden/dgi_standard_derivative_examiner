@@ -123,7 +123,7 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
     $all_media = $this->utils->getMediaReferencingNodeAndTerm($node, $this->term);
     $media = array_filter($all_media, function (string $mid) {
       $media = $this->mediaStorage->load($mid);
-      return $media->bundle() === $this->getPluginDefinition()['type'];
+      return $media?->bundle() === $this->getPluginDefinition()['type'];
     });
     return !empty($media);
   }
