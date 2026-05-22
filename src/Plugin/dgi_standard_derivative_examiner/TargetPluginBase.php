@@ -120,7 +120,11 @@ abstract class TargetPluginBase extends PluginBase implements TargetInterface, C
     if (!$this->term) {
       throw new TargetTermAbsentException(target: $this, uri: $this->getPluginDefinition()['uri'] ?? '(unknown URI)');
     }
-    $media = $this->utils->getMediaReferencingNodeAndTerm($node, $this->term);
+    $all_media = $this->utils->getMediaReferencingNodeAndTerm($node, $this->term);
+    $media = array_filter($all_media, function (string $mid) {
+      $media = $this->mediaStorage->load($mid);
+      return $media->bundle() === $this->getPluginDefinition()['type'];
+    });
     return !empty($media);
   }
 
